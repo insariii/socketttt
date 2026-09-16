@@ -24,7 +24,6 @@ def client_thread(conn, addr):
 
             if command == "JOIN":
                 username = data.decode("utf-8")
-
                 clients[conn] = username
 
                 print(f"Подключился клиент: {addr}")
@@ -43,8 +42,12 @@ def client_thread(conn, addr):
                                 "TEXT",
                                 f"{username}: {text}".encode("utf-8")
                             )
-                        except (ConnectionResetError, BrokenPipeError, OSError):
-                            pass
+                        except ConnectionResetError:
+                            print("Клиент уже отключился")
+                        except BrokenPipeError:
+                            print("Не удалось отправить сообщение")
+                        except OSError as error:
+                            print(f"Ошибка отправки: {error}")
 
             elif command == "LIST":
                 users = "\n".join(clients.values())
@@ -69,11 +72,11 @@ def client_thread(conn, addr):
     except ConnectionResetError:
         print(f"Соединение сброшено: {addr}")
 
-    except ConnectionError:
-        print(f"Соединение закрыто: {addr}")
-
     except BrokenPipeError:
         print(f"Соединение разорвано: {addr}")
+
+    except ConnectionError:
+        print(f"Соединение закрыто: {addr}")
 
     except OSError as error:
         print(f"Ошибка: {error}")
@@ -91,8 +94,12 @@ def client_thread(conn, addr):
                         "TEXT",
                         f"Система: {username} вышел из чата".encode("utf-8")
                     )
-                except (ConnectionResetError, BrokenPipeError, OSError):
-                    pass
+                except ConnectionResetError:
+                    print("Клиент уже отключился")
+                except BrokenPipeError:
+                    print("Не удалось отправить сообщение")
+                except OSError as error:
+                    print(f"Ошибка отправки: {error}")
 
         print(f"Клиент отключился: {addr}")
 
@@ -103,7 +110,6 @@ s.bind((HOST, PORT))
 s.listen()
 
 print("Сервер слушает...")
-
 
 try:
     while True:
